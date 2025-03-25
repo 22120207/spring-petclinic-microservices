@@ -162,7 +162,7 @@ pipeline {
                             conclusion: 'SUCCESS'
                         )
                     }
-                    else {
+                    else if (env.CHANGE_TARGET == 'main') {
                         publishChecks(
                             name: 'Test Code Coverage',
                             title: 'Code Coverage Check Failed',
