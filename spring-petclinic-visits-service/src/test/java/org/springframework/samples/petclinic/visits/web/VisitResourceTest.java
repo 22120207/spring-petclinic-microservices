@@ -17,6 +17,8 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(VisitResource.class)
@@ -58,4 +60,29 @@ class VisitResourceTest {
             .andExpect(jsonPath("$.items[1].petId").value(222))
             .andExpect(jsonPath("$.items[2].petId").value(222));
     }
+
+    @Test
+    void shouldFetchVisitsForSinglePet() throws Exception {
+        given(visitRepository.findByPetId(111))
+            .willReturn(
+                asList(
+                    Visit.VisitBuilder.aVisit()
+                        .id(1)
+                        .petId(111)
+                        .build(),
+                    Visit.VisitBuilder.aVisit()
+                        .id(2)
+                        .petId(111)
+                        .build()
+                )
+            );
+
+        mvc.perform(get("/owners/*/pets/111/visits"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[1].id").value(2))
+            .andExpect(jsonPath("$[0].petId").value(111))
+            .andExpect(jsonPath("$[1].petId").value(111));
+    }
+
 }
