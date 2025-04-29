@@ -47,7 +47,7 @@ spec:
         - containerPort: 9090
         env:
         - name: CONFIG_SERVER_URL
-          value: "configserver:http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888"
+          value: "http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888"
         - name: DISCOVERY_SERVER_URL
           value: "http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761/eureka/"
 ---
