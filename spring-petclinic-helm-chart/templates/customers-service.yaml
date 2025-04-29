@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-customers-service-deployment
+  labels:
+    app: spring-petclinic-customers-service-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-customers-service-pod
+  template:
+    metadata:
+      name: spring-petclinic-customers-service-pod
+      labels:
+        app: spring-petclinic-customers-service-pod
+    spec:
+      initContainers:
+        - name: wait-for-config-server
+          image: darthcabs/tiny-tools:1
+          args:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888)" != "200" ]]; do
+                echo '.'
+                sleep 15;
+              done
+        - name: wait-for-discovery-server
+          image: darthcabs/tiny-tools:1
+          args:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761)" != "200" ]]; do
+                echo '.'
+                sleep 15;
+              done
+      containers:
+        - name: spring-petclinic-customers-service-pod
+          image: "{{ .Values.images.customersService.repository }}/{{ .Values.images.customersService.name }}:{{ .Values.images.customersService.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: CONFIG_SERVER_URL
+              value: "http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888"
+            - name: DISCOVERY_SERVER_URL
+              value: "http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761/eureka/"
+            - name: TRACING_SERVER_URL
+              value: "http://spring-petclinic-tracing-server-service.{{ .Values.namespace }}.svc.cluster.local:9411/api/v2/spans"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-customers-service-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: spring-petclinic-customers-service-pod
+  ports:
+    - name: spring-petclinic-customers-service-port
+      protocol: TCP
+      port: 8081
+      targetPort: 8081

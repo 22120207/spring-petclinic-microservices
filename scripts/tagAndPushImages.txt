@@ -1,0 +1,35 @@
+docker tag springcommunity/spring-petclinic-api-gateway registry.caotienminh.software/springcommunity/spring-petclinic-api-gateway:latest
+docker tag springcommunity/spring-petclinic-discovery-server registry.caotienminh.software/springcommunity/spring-petclinic-discovery-server:latest
+docker tag springcommunity/spring-petclinic-config-server registry.caotienminh.software/springcommunity/spring-petclinic-config-server:latest
+docker tag springcommunity/spring-petclinic-genai-service registry.caotienminh.software/springcommunity/spring-petclinic-genai-service:latest
+docker tag springcommunity/spring-petclinic-visits-service registry.caotienminh.software/springcommunity/spring-petclinic-visits-service:latest
+docker tag springcommunity/spring-petclinic-vets-service registry.caotienminh.software/springcommunity/spring-petclinic-vets-service:latest
+docker tag springcommunity/spring-petclinic-customers-service registry.caotienminh.software/springcommunity/spring-petclinic-customers-service:latest
+docker tag springcommunity/spring-petclinic-admin-server registry.caotienminh.software/springcommunity/spring-petclinic-admin-server:latest
+
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-api-gateway:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-discovery-server:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-config-server:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-genai-service:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-visits-service:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-vets-service:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-customers-service:latest
+docker push registry.caotienminh.software/springcommunity/spring-petclinic-admin-server:latest
+
+docker tag springcommunity/spring-petclinic-api-gateway tienminhktvn2/spring-petclinic-api-gateway:latest
+docker tag springcommunity/spring-petclinic-discovery-server tienminhktvn2/spring-petclinic-discovery-server:latest
+docker tag springcommunity/spring-petclinic-config-server tienminhktvn2/spring-petclinic-config-server:latest
+docker tag springcommunity/spring-petclinic-genai-service tienminhktvn2/spring-petclinic-genai-service:latest
+docker tag springcommunity/spring-petclinic-visits-service tienminhktvn2/spring-petclinic-visits-service:latest
+docker tag springcommunity/spring-petclinic-vets-service tienminhktvn2/spring-petclinic-vets-service:latest
+docker tag springcommunity/spring-petclinic-customers-service tienminhktvn2/spring-petclinic-customers-service:latest
+docker tag springcommunity/spring-petclinic-admin-server tienminhktvn2/spring-petclinic-admin-server:latest
+
+docker push tienminhktvn2/spring-petclinic-api-gateway:latest
+docker push tienminhktvn2/spring-petclinic-discovery-server:latest
+docker push tienminhktvn2/spring-petclinic-config-server:latest
+docker push tienminhktvn2/spring-petclinic-genai-service:latest
+docker push tienminhktvn2/spring-petclinic-visits-service:latest
+docker push tienminhktvn2/spring-petclinic-vets-service:latest
+docker push tienminhktvn2/spring-petclinic-customers-service:latest
+docker push tienminhktvn2/spring-petclinic-admin-server:latest

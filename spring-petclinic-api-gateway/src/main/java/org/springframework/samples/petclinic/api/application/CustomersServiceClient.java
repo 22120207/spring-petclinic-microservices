@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.api.application;
 
+import org.springframework.beans.factory.annotation.Value; // Import Value
 import org.springframework.samples.petclinic.api.dto.OwnerDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,9 +23,13 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Maciej Szarlinski
+ *         Modified by [Your Name/Handle] to use configurable URL
  */
 @Component
 public class CustomersServiceClient {
+
+    @Value("${petclinic.customer-service.url:http://localhost:8081}")
+    private String customerServiceUrl;
 
     private final WebClient.Builder webClientBuilder;
 
@@ -34,8 +39,8 @@ public class CustomersServiceClient {
 
     public Mono<OwnerDetails> getOwner(final int ownerId) {
         return webClientBuilder.build().get()
-            .uri("http://customers-service/owners/{ownerId}", ownerId)
-            .retrieve()
-            .bodyToMono(OwnerDetails.class);
+                .uri(customerServiceUrl + "/owners/{ownerId}", ownerId)
+                .retrieve()
+                .bodyToMono(OwnerDetails.class);
     }
 }

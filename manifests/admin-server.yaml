@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-admin-server-deployment
+  labels:
+    app: spring-petclinic-admin-server-deployment
+  namespace: spring-petclinic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-admin-server-pod
+  template:
+    metadata:
+      name: spring-petclinic-admin-server-pod
+      labels:
+        app: spring-petclinic-admin-server-pod
+    spec:
+      initContainers:
+      - name: wait-for-config-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      - name: wait-for-discovery-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      containers:
+      - name: spring-petclinic-admin-server-pod
+        image: tienminhktvn2/spring-petclinic-admin-server
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+        env:
+        - name: CONFIG_SERVER_URL
+          value: "configserver:http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888"
+        - name: DISCOVERY_SERVER_URL
+          value: "http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-admin-server-service
+  namespace: spring-petclinic
+spec:
+  selector:
+    app: spring-petclinic-admin-server-pod
+  ports:
+  - name: spring-petclinic-admin-server-port
+    protocol: TCP
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: {}
+  name: spring-petclinic.admin-server.com
+  namespace: spring-petclinic
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: spring-petclinic.admin-server.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: spring-petclinic-admin-server-service
+            port:
+              number: 9090

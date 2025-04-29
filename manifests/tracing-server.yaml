@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-tracing-server-deployment
+  labels:
+    app: spring-petclinic-tracing-server-deployment
+  namespace: spring-petclinic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-tracing-server-pod
+  template:
+    metadata:
+      name: spring-petclinic-tracing-server-pod
+      labels:
+        app: spring-petclinic-tracing-server-pod
+    spec:
+      initContainers:
+      - name: wait-for-config-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      - name: wait-for-discovery-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      containers:
+      - name: spring-petclinic-tracing-server-pod
+        image: openzipkin/zipkin
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9411
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-tracing-server-service
+  namespace: spring-petclinic
+spec:
+  selector:
+    app: spring-petclinic-tracing-server-pod
+  ports:
+  - name: spring-petclinic-tracing-server-port
+    protocol: TCP
+    port: 9411
+    targetPort: 9411

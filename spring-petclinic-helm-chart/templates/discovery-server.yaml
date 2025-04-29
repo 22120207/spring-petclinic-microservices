@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-discovery-server-deployment
+  labels:
+    app: spring-petclinic-discovery-server-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-discovery-server-pod
+  template:
+    metadata:
+      name: spring-petclinic-discovery-server-pod
+      labels:
+        app: spring-petclinic-discovery-server-pod
+    spec:
+      initContainers:
+        - name: wait-for-config-server
+          image: darthcabs/tiny-tools:1
+          args:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888)" != "200" ]]; do
+                echo '.'
+                sleep 15;
+              done
+      containers:
+        - name: spring-petclinic-discovery-server-pod
+          image: "{{ .Values.images.discoveryServer.repository }}/{{ .Values.images.discoveryServer.name }}:{{ .Values.images.discoveryServer.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8761
+          env:
+            - name: CONFIG_SERVER_URL
+              value: "http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888"
+            - name: DISCOVERY_SERVER_URL
+              value: "http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-discovery-server-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: spring-petclinic-discovery-server-pod
+  ports:
+    - name: spring-petclinic-discovery-server-port
+      protocol: TCP
+      port: 8761
+      targetPort: 8761
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: {}
+  name: spring-petclinic.discovery-server.com
+  namespace: {{ .Values.namespace }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: spring-petclinic.discovery-server.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-petclinic-discovery-server-service
+                port:
+                  number: 8761

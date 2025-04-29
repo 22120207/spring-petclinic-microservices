@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-discovery-server-deployment
+  labels:
+    app: spring-petclinic-discovery-server-deployment
+  namespace: spring-petclinic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-discovery-server-pod
+  template:
+    metadata:
+      name: spring-petclinic-discovery-server-pod
+      labels:
+        app: spring-petclinic-discovery-server-pod
+    spec:
+      initContainers:
+      - name: wait-for-config-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      containers:
+      - name: spring-petclinic-discovery-server-pod
+        image: tienminhktvn2/spring-petclinic-discovery-server
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8761
+        env:
+        - name: CONFIG_SERVER_URL
+          value: "http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-discovery-server-service
+  namespace: spring-petclinic
+spec:
+  selector:
+    app: spring-petclinic-discovery-server-pod
+  ports:
+  - name: spring-petclinic-discovery-server-port
+    protocol: TCP
+    port: 8761
+    targetPort: 8761
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: {}
+  name: spring-petclinic.discovery-server.com
+  namespace: spring-petclinic
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: spring-petclinic.discovery-server.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: spring-petclinic-discovery-server-service
+            port:
+              number: 8761

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-vets-service-deployment
+  labels:
+    app: spring-petclinic-vets-service-deployment
+  namespace: spring-petclinic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-vets-service-pod
+  template:
+    metadata:
+      name: spring-petclinic-vets-service-pod
+      labels:
+        app: spring-petclinic-vets-service-pod
+    spec:
+      initContainers:
+      - name: wait-for-config-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      - name: wait-for-discovery-server
+        image: darthcabs/tiny-tools:1
+        args:
+        - /bin/bash
+        - -c
+        - >
+          set -x;
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761)" != "200" ]]; do
+            echo '.'
+            sleep 15;
+          done
+      containers:
+      - name: spring-petclinic-vets-service-pod
+        image: tienminhktvn2/spring-petclinic-vets-service
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8083
+        env:
+        - name: CONFIG_SERVER_URL
+          value: "http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-vets-service-service
+  namespace: spring-petclinic
+spec:
+  selector:
+    app: spring-petclinic-vets-service-pod
+  ports:
+  - name: spring-petclinic-vets-service-port
+    protocol: TCP
+    port: 8083
+    targetPort: 8083

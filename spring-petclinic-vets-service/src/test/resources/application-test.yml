@@ -1,7 +1,7 @@
 spring:
   cloud:
     config:
-      enabled: false
+      enabled: true
   sql:
     init:
       schema-locations: classpath*:db/hsqldb/schema.sql
@@ -12,7 +12,7 @@ spring:
 
 eureka:
   client:
-    enabled: false
+    enabled: true
 
 vets:
   cache:

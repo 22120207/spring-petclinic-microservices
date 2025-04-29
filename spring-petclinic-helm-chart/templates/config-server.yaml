@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic-config-server-deployment
+  labels:
+    app: spring-petclinic-config-server-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-petclinic-config-server-pod
+  template:
+    metadata:
+      name: spring-petclinic-config-server-pod
+      labels:
+        app: spring-petclinic-config-server-pod
+    spec:
+      containers:
+        - name: spring-petclinic-config-server-pod
+          image: "{{ .Values.images.configServer.repository }}/{{ .Values.images.configServer.name }}:{{ .Values.images.configServer.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+          env:
+            - name: DISCOVERY_SERVER_URL
+              value: "http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761/eureka/"
+            - name: TRACING_SERVER_URL
+              value: "http://spring-petclinic-tracing-server-service.{{ .Values.namespace }}.svc.cluster.local:9411/api/v2/spans"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic-config-server-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: spring-petclinic-config-server-pod
+  ports:
+    - name: spring-petclinic-config-server-port
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: {}
+  name: spring-petclinic.config-server.com
+  namespace: {{ .Values.namespace }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: spring-petclinic.config-server.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-petclinic-config-server-service
+                port:
+                  number: 8888
