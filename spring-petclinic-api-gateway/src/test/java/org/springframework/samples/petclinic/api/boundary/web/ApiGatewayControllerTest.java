@@ -22,7 +22,7 @@ import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @WebFluxTest(controllers = ApiGatewayController.class)
-@Import({ReactiveResilience4JAutoConfiguration.class, CircuitBreakerConfiguration.class})
+@Import({ ReactiveResilience4JAutoConfiguration.class, CircuitBreakerConfiguration.class })
 class ApiGatewayControllerTest {
 
     @MockBean
@@ -34,34 +34,33 @@ class ApiGatewayControllerTest {
     @Autowired
     private WebTestClient client;
 
-
     @Test
     void getOwnerDetails_withAvailableVisitsService() {
         PetDetails cat = PetDetails.PetDetailsBuilder.aPetDetails()
-            .id(20)
-            .name("Garfield")
-            .visits(new ArrayList<>())
-            .build();
+                .id(20)
+                .name("Garfield")
+                .visits(new ArrayList<>())
+                .build();
         OwnerDetails owner = OwnerDetails.OwnerDetailsBuilder.anOwnerDetails()
-            .pets(List.of(cat))
-            .build();
+                .pets(List.of(cat))
+                .build();
         Mockito
-            .when(customersServiceClient.getOwner(1))
-            .thenReturn(Mono.just(owner));
+                .when(customersServiceClient.getOwner(1))
+                .thenReturn(Mono.just(owner));
 
         VisitDetails visit = new VisitDetails(300, cat.id(), null, "First visit");
         Visits visits = new Visits(List.of(visit));
         Mockito
-            .when(visitsServiceClient.getVisitsForPets(Collections.singletonList(cat.id())))
-            .thenReturn(Mono.just(visits));
+                .when(visitsServiceClient.getVisitsForPets(Collections.singletonList(cat.id())))
+                .thenReturn(Mono.just(visits));
 
         client.get()
-            .uri("/api/gateway/owners/1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.pets[0].name").isEqualTo("Garfield")
-            .jsonPath("$.pets[0].visits[0].description").isEqualTo("First visit");
+                .uri("/api/gateway/owners/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.pets[0].name").isEqualTo("Garfield")
+                .jsonPath("$.pets[0].visits[0].description").isEqualTo("First visit");
     }
 
     /**
@@ -70,28 +69,28 @@ class ApiGatewayControllerTest {
     @Test
     void getOwnerDetails_withServiceError() {
         PetDetails cat = PetDetails.PetDetailsBuilder.aPetDetails()
-            .id(20)
-            .name("Garfield")
-            .visits(new ArrayList<>())
-            .build();
+                .id(20)
+                .name("Garfield")
+                .visits(new ArrayList<>())
+                .build();
         OwnerDetails owner = OwnerDetails.OwnerDetailsBuilder.anOwnerDetails()
-            .pets(List.of(cat))
-            .build();
+                .pets(List.of(cat))
+                .build();
         Mockito
-            .when(customersServiceClient.getOwner(1))
-            .thenReturn(Mono.just(owner));
+                .when(customersServiceClient.getOwner(1))
+                .thenReturn(Mono.just(owner));
 
         Mockito
-            .when(visitsServiceClient.getVisitsForPets(Collections.singletonList(cat.id())))
-            .thenReturn(Mono.error(new ConnectException("Simulate error")));
+                .when(visitsServiceClient.getVisitsForPets(Collections.singletonList(cat.id())))
+                .thenReturn(Mono.error(new ConnectException("Simulate error")));
 
         client.get()
-            .uri("/api/gateway/owners/1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.pets[0].name").isEqualTo("Garfield")
-            .jsonPath("$.pets[0].visits").isEmpty();
+                .uri("/api/gateway/owners/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.pets[0].name").isEqualTo("Garfield")
+                .jsonPath("$.pets[0].visits").isEmpty();
     }
 
 }

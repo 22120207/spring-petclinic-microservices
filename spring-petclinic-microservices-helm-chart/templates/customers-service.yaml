@@ -24,7 +24,7 @@ spec:
             - -c
             - >
               set -x;
-              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888)" != "200" ]]; do
+              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-config-server-service:8888)" != "200" ]]; do
                 echo '.'
                 sleep 15;
               done
@@ -35,7 +35,7 @@ spec:
             - -c
             - >
               set -x;
-              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761)" != "200" ]]; do
+              while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://spring-petclinic-discovery-server-service:8761)" != "200" ]]; do
                 echo '.'
                 sleep 15;
               done
@@ -47,11 +47,11 @@ spec:
             - containerPort: 8081
           env:
             - name: CONFIG_SERVER_URL
-              value: "http://spring-petclinic-config-server-service.{{ .Values.namespace }}.svc.cluster.local:8888"
+              value: "http://spring-petclinic-config-server-service:8888"
             - name: DISCOVERY_SERVER_URL
-              value: "http://spring-petclinic-discovery-server-service.{{ .Values.namespace }}.svc.cluster.local:8761/eureka/"
+              value: "http://spring-petclinic-discovery-server-service:8761/eureka/"
             - name: TRACING_SERVER_URL
-              value: "http://spring-petclinic-tracing-server-service.{{ .Values.namespace }}.svc.cluster.local:9411/api/v2/spans"
+              value: "http://spring-petclinic-tracing-server-service:9411/api/v2/spans"
 ---
 apiVersion: v1
 kind: Service

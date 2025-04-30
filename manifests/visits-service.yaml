@@ -48,6 +48,10 @@ spec:
         env:
         - name: CONFIG_SERVER_URL
           value: "http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888"
+        - name: DISCOVERY_SERVER_URL
+          value: "http://spring-petclinic-discovery-server-service.spring-petclinic.svc.cluster.local:8761/eureka/"
+        - name: TRACING_SERVER_URL
+          value: "http://spring-petclinic-tracing-server-service.spring-petclinic.svc.cluster.local:9411/api/v2/spans"
 ---
 apiVersion: v1
 kind: Service

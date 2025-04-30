@@ -3,10 +3,8 @@ spring:
     web-application-type: reactive
   application:
     name: genai-service
-  profiles:
-    active: production
   config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888/},optional:classpath:/creds.yaml
+    import: optional:configserver:${CONFIG_SERVER_URL:http://spring-petclinic-config-server-service:8888/},optional:classpath:/creds.yaml
   ai:
     chat:
       client:
@@ -28,7 +26,6 @@ spring:
             temperature: 0.7
             model: gpt-4o-mini
 
-
 logging:
   level:
     org:
@@ -42,4 +39,4 @@ spring:
   config:
     activate:
       on-profile: docker
-    import: optional:configserver:${CONFIG_SERVER_URL:http://spring-petclinic-config-server-service.spring-petclinic.svc.cluster.local:8888}
+    import: optional:configserver:${CONFIG_SERVER_URL:http://spring-petclinic-config-server-service:8888}
