@@ -116,79 +116,83 @@ pipeline {
             }
         }
 
-        stage('Maven Build') {
-            steps {
-                script {
-                    boolean testSuccess = true
-                    boolean buildSuccess = true
+        stage('Build') {
+            parallel {
+                stage('Maven Build') {
+                    steps {
+                        script {
+                            boolean testSuccess = true
+                            boolean buildSuccess = true
 
-                    def reports = env.CODE_COVERAGES ? env.CODE_COVERAGES.split(',') : []
+                            def reports = env.CODE_COVERAGES ? env.CODE_COVERAGES.split(',') : []
 
-                    if (env.CHANGE_ID && env.CHANGE_TARGET == 'main') {
-                        for (codeCoverage in reports) {
-                            if (codeCoverage.toDouble() < 70) {
-                                testSuccess = false           
+                            if (env.CHANGE_ID && env.CHANGE_TARGET == 'main') {
+                                for (codeCoverage in reports) {
+                                    if (codeCoverage.toDouble() < 70) {
+                                        testSuccess = false           
 
-                                break
+                                        break
+                                    }
+                                }
+                            }
+                            
+                            def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
+                            if (testSuccess && modules.size() > 0) {
+                                
+                                for (module in modules) {
+                                    def buildCommand = "mvn -pl ${module} -am clean install -DskipTests"
+                                    echo "Build for affected modules: ${module}"
+                                    sh "${buildCommand}"
+                                }
+
+                                try {
+                                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true, allowEmptyArchive: false
+                                }
+                                catch (Exception e) {
+                                    echo "No artifacts found to archive. Skipping artifact archival."
+                                    buildSuccess = false
+                                }
+                            }
+
+                            if (testSuccess && buildSuccess && env.CHANGE_TARGET == 'main') {
+                                publishChecks(
+                                    name: 'Test Code Coverage',
+                                    title: 'Code Coverage Check Success!',
+                                    summary: "All test code coverage is greater than 70%",
+                                    text: 'Check Success!',
+                                    detailsURL: env.BUILD_URL,
+                                    conclusion: 'SUCCESS'
+                                )
+                            }
+                            else if (env.CHANGE_TARGET == 'main') {
+
+                                publishChecks(
+                                    name: 'Test Code Coverage',
+                                    title: 'Code Coverage Check Failed',
+                                    summary: "Coverage must be at least 70%. Your coverage for one of modules is less then 70%.",
+                                    text: 'Increase test coverage and retry the build.',
+                                    detailsURL: env.BUILD_URL,
+                                    conclusion: 'FAILURE'
+                                )
                             }
                         }
                     }
-                    
-                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
-                    if (testSuccess && modules.size() > 0) {
-                        
-                        for (module in modules) {
-                            def buildCommand = "mvn -pl ${module} -am clean install -DskipTests"
-                            echo "Build for affected modules: ${module}"
-                            sh "${buildCommand}"
-                        }
-
-                        try {
-                            archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true, allowEmptyArchive: false
-                        }
-                        catch (Exception e) {
-                            echo "No artifacts found to archive. Skipping artifact archival."
-                            buildSuccess = false
-                        }
-                    }
-
-                    if (testSuccess && buildSuccess && env.CHANGE_TARGET == 'main') {
-                        publishChecks(
-                            name: 'Test Code Coverage',
-                            title: 'Code Coverage Check Success!',
-                            summary: "All test code coverage is greater than 70%",
-                            text: 'Check Success!',
-                            detailsURL: env.BUILD_URL,
-                            conclusion: 'SUCCESS'
-                        )
-                    }
-                    else if (env.CHANGE_TARGET == 'main') {
-
-                        publishChecks(
-                            name: 'Test Code Coverage',
-                            title: 'Code Coverage Check Failed',
-                            summary: "Coverage must be at least 70%. Your coverage for one of modules is less then 70%.",
-                            text: 'Increase test coverage and retry the build.',
-                            detailsURL: env.BUILD_URL,
-                            conclusion: 'FAILURE'
-                        )
-                    }
                 }
-            }
-        }
 
-        stage('Build Docker Images') {
-            steps {
-                script {
-                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
-                    if (modules.size() > 0) {
+                stage('Build Docker Images') {
+                    steps {
+                        script {
+                            def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
+                            if (modules.size() > 0) {
 
-                        // Build and Tag Images for changed modules
-                        for (module in modules) {
-                            def buildImagesCommand = "./mvnw clean install -pl ${module} -PbuildDocker -DskipTests"
-                            echo "Build Images for affected modules: ${module}"
-                            sh "${buildImagesCommand}"
-                            sh "docker tag springcommunity/${module}:latest ${USERNAME}/${module}:${env.COMMIT_HASH}"
+                                // Build and Tag Images for changed modules
+                                for (module in modules) {
+                                    def buildImagesCommand = "./mvnw clean install -pl ${module} -PbuildDocker -DskipTests"
+                                    echo "Build Images for affected modules: ${module}"
+                                    sh "${buildImagesCommand}"
+                                    sh "docker tag springcommunity/${module}:latest ${USERNAME}/${module}:${env.COMMIT_HASH}"
+                                }
+                            }
                         }
                     }
                 }
