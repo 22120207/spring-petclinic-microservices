@@ -45,11 +45,11 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: OPENAI_API_KEY
-              value: ""
+              value: "None"
             - name: AZURE_OPENAI_KEY
-              value: ""
+              value: "None"
             - name: AZURE_OPENAI_ENDPOINT
-              value: ""
+              value: "None"
             - name: CONFIG_SERVER_URL
               value: "http://spring-petclinic-config-server-service:8888"
             - name: DISCOVERY_SERVER_URL

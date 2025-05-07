@@ -23,7 +23,7 @@ spring:
           filters:
             - StripPrefix=2
         - id: visits-service
-          uri: ${VISITS_SERVICE_URI:http://spring-petclinic-visits-service-service"":8082}
+          uri: ${VISITS_SERVICE_URI:http://spring-petclinic-visits-service-service:8082}
           predicates:
             - Path=/api/visit/**
           filters:

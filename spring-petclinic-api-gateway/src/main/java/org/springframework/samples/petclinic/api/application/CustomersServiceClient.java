@@ -34,7 +34,7 @@ public class CustomersServiceClient {
 
     public Mono<OwnerDetails> getOwner(final int ownerId) {
         return webClientBuilder.build().get()
-            .uri("http://spring-petclinic-customers-service-service:8081/owners/{ownerId}", ownerId)
+            .uri("http://spring-petclinic-customers-service-service/owners/{ownerId}", ownerId)
             .retrieve()
             .bodyToMono(OwnerDetails.class);
     }

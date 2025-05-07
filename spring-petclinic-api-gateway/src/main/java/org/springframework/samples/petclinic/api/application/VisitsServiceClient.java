@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.joining;
 public class VisitsServiceClient {
 
     // Could be changed for testing purpose
-    private String hostname = "http://spring-petclinic-visits-service-service:8082/";
+    private String hostname = "http://spring-petclinic-visits-service-service/";
 
     private final WebClient.Builder webClientBuilder;
 
@@ -41,10 +41,10 @@ public class VisitsServiceClient {
 
     public Mono<Visits> getVisitsForPets(final List<Integer> petIds) {
         return webClientBuilder.build()
-                .get()
-                .uri(hostname + "pets/visits?petId={petId}", joinIds(petIds))
-                .retrieve()
-                .bodyToMono(Visits.class);
+            .get()
+            .uri(hostname + "pets/visits?petId={petId}", joinIds(petIds))
+            .retrieve()
+            .bodyToMono(Visits.class);
     }
 
     private String joinIds(List<Integer> petIds) {
