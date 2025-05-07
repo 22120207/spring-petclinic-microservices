@@ -138,7 +138,7 @@ pipeline {
                     if (testSuccess && modules.size() > 0) {
                         
                         for (module in modules) {
-                            def buildCommand = "mvn -pl ${module} -am clean install"
+                            def buildCommand = "mvn -pl ${module} -am clean install -DskipTests"
                             echo "Build for affected modules: ${module}"
                             sh "${buildCommand}"
                         }
@@ -225,6 +225,9 @@ pipeline {
         always {
             echo 'Logging out of Docker Hub'
             sh 'docker logout'
+
+            echo 'Cleaning up all Docker images…'
+            sh 'docker image prune -af'
         }
     }
 }
