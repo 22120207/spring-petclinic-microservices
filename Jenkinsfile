@@ -20,6 +20,11 @@ pipeline {
         GENAI_IMAGE_TAG     = "latest"
     }
 
+    def customersImageTag = 'latest'
+    def vetsImageTag = 'latest'
+    def visitsImageTag = 'latest'
+    def genaiImageTag = 'latest'
+
     stages {
         stage('Check SCM') {
             steps {
@@ -66,13 +71,13 @@ pipeline {
                     env.CHANGED_MODULES = changedFolders.join(',')
 
                     if (changedFolders.contains('spring-petclinic-customers-service')) {
-                        env.CUSTOMERS_IMAGE_TAG = env.COMMIT_HASH
+                        customersImageTag = env.COMMIT_HASH
                     }
                     if (changedFolders.contains('spring-petclinic-vets-service')) {
-                        env.VETS_IMAGE_TAG = env.COMMIT_HASH
+                        vetsImageTag = env.COMMIT_HASH
                     }
                     if (changedFolders.contains('spring-petclinic-visits-service')) {
-                        env.VISITS_IMAGE_TAG = env.COMMIT_HASH
+                        visitsImageTag = env.COMMIT_HASH
                     }
 
                     echo "${env.VISITS_IMAGE_TAG}"
@@ -239,14 +244,16 @@ pipeline {
 
         stage('Trigger Developer Build Job') {
             steps {
-                build job: 'developer_build', 
-                    parameters: [
-                    string(name: 'CUSTOMERS_IMAGE_TAG', value: env.CUSTOMERS_IMAGE_TAG),
-                    string(name: 'VETS_IMAGE_TAG',      value: env.VETS_IMAGE_TAG),
-                    string(name: 'VISITS_IMAGE_TAG',    value: env.VISITS_IMAGE_TAG),
-                    string(name: 'GENAI_IMAGE_TAG',     value: env.GENAI_IMAGE_TAG)
-                    ],
-                    wait: false
+                script {
+                    build job: 'developer_build', 
+                        parameters: [
+                            string(name: 'CUSTOMERS_IMAGE_TAG', value: customersImageTag),
+                            string(name: 'VETS_IMAGE_TAG',      value: vetsImageTag),
+                            string(name: 'VISITS_IMAGE_TAG',    value: visitsImageTag),
+                            string(name: 'GENAI_IMAGE_TAG',     value: genaiImageTag)
+                        ],
+                        wait: false
+                }
             }
         }
     }
