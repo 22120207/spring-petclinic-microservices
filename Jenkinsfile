@@ -74,6 +74,9 @@ pipeline {
                     if (changedFolders.contains('spring-petclinic-visits-service')) {
                         env.VISITS_IMAGE_TAG = env.COMMIT_HASH
                     }
+
+                    echo "${env.VISITS_IMAGE_TAG}"
+                    echo "${env.VETS_IMAGE_TAG}"
                 }
             }
         }  
