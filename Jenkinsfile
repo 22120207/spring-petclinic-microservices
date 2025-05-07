@@ -54,7 +54,7 @@ pipeline {
 
                     echo "${changedFiles}"
 
-                    def folderList = ['spring-petclinic-customers-service', 'spring-petclinic-vets-service', 'spring-petclinic-visits-service', 'spring-petclinic-genai']
+                    def folderList = ['spring-petclinic-customers-service', 'spring-petclinic-vets-service', 'spring-petclinic-visits-service']
                     
                     def changedFolders = changedFiles.split('\n')
                         .collect { it.split('/')[0] }
@@ -73,9 +73,6 @@ pipeline {
                     }
                     if (changedFolders.contains('spring-petclinic-visits-service')) {
                         env.VISITS_IMAGE_TAG = env.COMMIT_HASH
-                    }
-                    if (changedFolders.contains('spring-petclinic-genai')) {
-                        env.GENAI_IMAGE_TAG = env.COMMIT_HASH
                     }
                 }
             }

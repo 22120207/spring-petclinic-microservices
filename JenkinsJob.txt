@@ -1,10 +1,11 @@
 pipeline {
     agent any
+
     parameters {
-        choice(name: 'CUSTOMERS_IMAGE_TAG', choices: ['latest'], description: 'Tag for spring-petclinic-customers-service')
-        choice(name: 'VETS_IMAGE_TAG',      choices: ['latest'], description: 'Tag for spring-petclinic-vets-service')
-        choice(name: 'VISITS_IMAGE_TAG',    choices: ['latest'], description: 'Tag for spring-petclinic-visits-service')
-        choice(name: 'GENAI_IMAGE_TAG',     choices: ['latest'], description: 'Tag for spring-petclinic-gen-ai')
+        string(name: 'CUSTOMERS_IMAGE_TAG', defaultValue: 'latest', description: 'Tag for customers image')
+        string(name: 'VETS_IMAGE_TAG',      defaultValue: 'latest', description: 'Tag for vets image')
+        string(name: 'VISITS_IMAGE_TAG',    defaultValue: 'latest', description: 'Tag for visits image')
+        string(name: 'GENAI_IMAGE_TAG',     defaultValue: 'latest', description: 'Tag for genai image')
     }
 
     environment {
