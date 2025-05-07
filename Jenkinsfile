@@ -14,6 +14,10 @@ pipeline {
 
     environment {
         USERNAME = "tienminhktvn2"
+        CUSTOMERS_IMAGE_TAG = "latest"
+        VETS_IMAGE_TAG      = "latest"
+        VISITS_IMAGE_TAG    = "latest"
+        GENAI_IMAGE_TAG     = "latest"
     }
 
     stages {
@@ -50,7 +54,7 @@ pipeline {
 
                     echo "${changedFiles}"
 
-                    def folderList = ['spring-petclinic-customers-service', 'spring-petclinic-vets-service', 'spring-petclinic-visits-service']
+                    def folderList = ['spring-petclinic-customers-service', 'spring-petclinic-vets-service', 'spring-petclinic-visits-service', 'spring-petclinic-genai']
                     
                     def changedFolders = changedFiles.split('\n')
                         .collect { it.split('/')[0] }
@@ -60,6 +64,19 @@ pipeline {
                     echo "Changed Folders: \n${changedFolders.join('\n')}"
                     
                     env.CHANGED_MODULES = changedFolders.join(',')
+
+                    if (changedFolders.contains('spring-petclinic-customers-service')) {
+                        env.CUSTOMERS_IMAGE_TAG = env.COMMIT_HASH
+                    }
+                    if (changedFolders.contains('spring-petclinic-vets-service')) {
+                        env.VETS_IMAGE_TAG = env.COMMIT_HASH
+                    }
+                    if (changedFolders.contains('spring-petclinic-visits-service')) {
+                        env.VISITS_IMAGE_TAG = env.COMMIT_HASH
+                    }
+                    if (changedFolders.contains('spring-petclinic-genai')) {
+                        env.GENAI_IMAGE_TAG = env.COMMIT_HASH
+                    }
                 }
             }
         }  
@@ -217,6 +234,19 @@ pipeline {
                         echo "No changed modules; skipping Docker push."
                     }
                 }
+            }
+        }
+
+        stage('Trigger Developer Build Job') {
+            steps {
+                build job: 'developer_build', 
+                    parameters: [
+                    string(name: 'CUSTOMERS_IMAGE_TAG', value: env.CUSTOMERS_IMAGE_TAG),
+                    string(name: 'VETS_IMAGE_TAG',      value: env.VETS_IMAGE_TAG),
+                    string(name: 'VISITS_IMAGE_TAG',    value: env.VISITS_IMAGE_TAG),
+                    string(name: 'GENAI_IMAGE_TAG',     value: env.GENAI_IMAGE_TAG)
+                    ],
+                    wait: false
             }
         }
     }

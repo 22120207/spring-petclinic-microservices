@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'CUSTOMERS_IMAGE_TAG', choices: ['latest'], defaultValue: 'latest')
+        choice(name: 'VETS_IMAGE_TAG',      choices: ['latest'], defaultValue: 'latest')
+        choice(name: 'VISITS_IMAGE_TAG',    choices: ['latest'], defaultValue: 'latest')
+        choice(name: 'GENAI_IMAGE_TAG',     choices: ['latest'], defaultValue: 'latest')
+    }
+
+    environment {
+        USERNAME = "tienminhktvn2"
+    }
+
+    stages {
+        stage('Deploy Images') {
+            steps {
+                script {
+                    def modules = [
+                        [name: 'spring-petclinic-customers-service', tag: params.CUSTOMERS_IMAGE_TAG],
+                        [name: 'spring-petclinic-vets-service',      tag: params.VETS_IMAGE_TAG],
+                        [name: 'spring-petclinic-visits-service',    tag: params.VISITS_IMAGE_TAG],
+                        [name: 'spring-petclinic-gen-ai',            tag: params.GENAI_IMAGE_TAG]
+                    ]
+                    modules.each { m ->
+                        echo "${USERNAME}/${m.name}:${m.tag}"
+                    }
+                }
+            }
+        }
+    }
+}
