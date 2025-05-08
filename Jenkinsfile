@@ -14,16 +14,7 @@ pipeline {
 
     environment {
         USERNAME = "tienminhktvn2"
-        CUSTOMERS_IMAGE_TAG = "latest"
-        VETS_IMAGE_TAG      = "latest"
-        VISITS_IMAGE_TAG    = "latest"
-        GENAI_IMAGE_TAG     = "latest"
     }
-
-    def customersImageTag = 'latest'
-    def vetsImageTag = 'latest'
-    def visitsImageTag = 'latest'
-    def genaiImageTag = 'latest'
 
     stages {
         stage('Check SCM') {
@@ -69,19 +60,6 @@ pipeline {
                     echo "Changed Folders: \n${changedFolders.join('\n')}"
                     
                     env.CHANGED_MODULES = changedFolders.join(',')
-
-                    if (changedFolders.contains('spring-petclinic-customers-service')) {
-                        customersImageTag = env.COMMIT_HASH
-                    }
-                    if (changedFolders.contains('spring-petclinic-vets-service')) {
-                        vetsImageTag = env.COMMIT_HASH
-                    }
-                    if (changedFolders.contains('spring-petclinic-visits-service')) {
-                        visitsImageTag = env.COMMIT_HASH
-                    }
-
-                    echo "${env.VISITS_IMAGE_TAG}"
-                    echo "${env.VETS_IMAGE_TAG}"
                 }
             }
         }  
@@ -245,6 +223,27 @@ pipeline {
         stage('Trigger Developer Build Job') {
             steps {
                 script {
+                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
+
+                    def customersImageTag = 'latest'
+                    def vetsImageTag = 'latest'
+                    def visitsImageTag = 'latest'
+                    def genaiImageTag = 'latest'
+
+                    for (module in modules) {
+                        if (changedFolders.contains('spring-petclinic-customers-service')) {
+                            customersImageTag = env.COMMIT_HASH
+                        }
+                        else if (changedFolders.contains('spring-petclinic-vets-service')) {
+                            vetsImageTag = env.COMMIT_HASH
+                            echo "${env.VETS_IMAGE_TAG}"
+                        }
+                        else if (changedFolders.contains('spring-petclinic-visits-service')) {
+                            visitsImageTag = env.COMMIT_HASH
+                            echo "${env.VISITS_IMAGE_TAG}"
+                        }
+                    }
+
                     build job: 'developer_build', 
                         parameters: [
                             string(name: 'CUSTOMERS_IMAGE_TAG', value: customersImageTag),
