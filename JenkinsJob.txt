@@ -2,31 +2,69 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'CUSTOMERS_IMAGE_TAG', defaultValue: 'latest', description: 'Tag for customers image')
-        string(name: 'VETS_IMAGE_TAG',      defaultValue: 'latest', description: 'Tag for vets image')
-        string(name: 'VISITS_IMAGE_TAG',    defaultValue: 'latest', description: 'Tag for visits image')
-        string(name: 'GENAI_IMAGE_TAG',     defaultValue: 'latest', description: 'Tag for genai image')
+        string(name: 'CUSTOMERS_SERVICE', defaultValue: 'main', description: 'Branch for customers service')
+        string(name: 'VETS_SERVICE',      defaultValue: 'main', description: 'Branch for vets service')
+        string(name: 'VISITS_SERVICE',    defaultValue: 'main', description: 'Branch for visits service')
+        string(name: 'GENAI_SERVICE',     defaultValue: 'main', description: 'Branch for genai service')
     }
 
     environment {
-        USERNAME = "tienminhktvn2"
+        DOCKER_USERNAME = "tienminhktvn2"
+        GITHUB_USERNAME = "22120207"
+        PROJECT_NAME = "spring-petclinic-microservices"
+        GIT_REPO_URL = "https://github.com/${GITHUB_USERNAME}/${PROJECT_NAME}.git"
     }
 
     stages {
-        stage('Deploy Images') {
+        stage('Checkout SCM') {
             steps {
                 script {
-                    def modules = [
-                        [name: 'spring-petclinic-customers-service', tag: params.CUSTOMERS_IMAGE_TAG],
-                        [name: 'spring-petclinic-vets-service',      tag: params.VETS_IMAGE_TAG],
-                        [name: 'spring-petclinic-visits-service',    tag: params.VISITS_IMAGE_TAG],
-                        [name: 'spring-petclinic-gen-ai',            tag: params.GENAI_IMAGE_TAG]
-                    ]
-                    modules.each { m ->
-                        echo "${USERNAME}/${m.name}:${m.tag}"
+                    sh "git clone ${env.GIT_REPO_URL}"
+                }
+            }
+        }
+
+        stage('Developer Build') {
+            steps {
+                dir("${env.PROJECT_NAME}") {
+                    script {
+                        def modules = [
+                            [name: 'spring-petclinic-customers-service', branch: params.CUSTOMERS_SERVICE],
+                            [name: 'spring-petclinic-vets-service',      branch: params.VETS_SERVICE],
+                            [name: 'spring-petclinic-visits-service',    branch: params.VISITS_SERVICE],
+                            [name: 'spring-petclinic-gen-ai',            branch: params.GENAI_SERVICE]
+                        ]
+
+                        sh 'git fetch --all --tags'
+
+                        def moduleCommits = [:]
+
+                        modules.each { m ->
+                            def branchName = m.branch
+
+                            // Get the first 8 characters of the SHA Git Commit
+                            def gitCommitHash = sh(script: "git rev-parse --short=8 origin/${branchName}", returnStdout: true).trim()
+
+                            def imageTag = 'latest'
+
+                            if (m.branch != 'main') {
+                                imageTag = gitCommitHash
+                            }
+
+                            echo "Module: ${m.name}, Tag: ${imageTag}"
+
+                            moduleCommits["${m.name}"] = imageTag
+                        }
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning workspace...'
+            cleanWs()
         }
     }
 }

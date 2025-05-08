@@ -225,29 +225,27 @@ pipeline {
                 script {
                     def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
 
-                    def customersImageTag = 'latest'
-                    def vetsImageTag = 'latest'
-                    def visitsImageTag = 'latest'
-                    def genaiImageTag = 'latest'
+                    def customersBranch = 'main'
+                    def vetsBranch = 'main'
+                    def visitsBranch = 'main'
+                    def genaiBranch = 'main'
 
                     if (modules.contains('spring-petclinic-customers-service')) {
-                        customersImageTag = env.COMMIT_HASH
+                        customersBranch = env.COMMIT_HASH
                     }
                     if (modules.contains('spring-petclinic-vets-service')) {
-                        vetsImageTag = env.COMMIT_HASH
-                        echo "${env.VETS_IMAGE_TAG}"
+                        vetsBranch = env.COMMIT_HASH
                     }
                     if (modules.contains('spring-petclinic-visits-service')) {
-                        visitsImageTag = env.COMMIT_HASH
-                        echo "${env.visitsImageTag}"
+                        visitsBranch = env.COMMIT_HASH
                     }
 
                     build job: 'developer_build', 
                         parameters: [
-                            string(name: 'CUSTOMERS_IMAGE_TAG', value: customersImageTag),
-                            string(name: 'VETS_IMAGE_TAG',      value: vetsImageTag),
-                            string(name: 'VISITS_IMAGE_TAG',    value: visitsImageTag),
-                            string(name: 'GENAI_IMAGE_TAG',     value: genaiImageTag)
+                            string(name: 'CUSTOMERS_IMAGE_TAG', value: customersBranch),
+                            string(name: 'VETS_IMAGE_TAG',      value: vetsBranch),
+                            string(name: 'VISITS_IMAGE_TAG',    value: visitsBranch),
+                            string(name: 'GENAI_IMAGE_TAG',     value: genaiBranch)
                         ],
                         wait: false
                 }
