@@ -230,18 +230,16 @@ pipeline {
                     def visitsImageTag = 'latest'
                     def genaiImageTag = 'latest'
 
-                    for (module in modules) {
-                        if (changedFolders.contains('spring-petclinic-customers-service')) {
-                            customersImageTag = env.COMMIT_HASH
-                        }
-                        else if (changedFolders.contains('spring-petclinic-vets-service')) {
-                            vetsImageTag = env.COMMIT_HASH
-                            echo "${env.VETS_IMAGE_TAG}"
-                        }
-                        else if (changedFolders.contains('spring-petclinic-visits-service')) {
-                            visitsImageTag = env.COMMIT_HASH
-                            echo "${env.VISITS_IMAGE_TAG}"
-                        }
+                    if (modules.contains('spring-petclinic-customers-service')) {
+                        customersImageTag = env.COMMIT_HASH
+                    }
+                    if (modules.contains('spring-petclinic-vets-service')) {
+                        vetsImageTag = env.COMMIT_HASH
+                        echo "${env.VETS_IMAGE_TAG}"
+                    }
+                    if (modules.contains('spring-petclinic-visits-service')) {
+                        visitsImageTag = env.COMMIT_HASH
+                        echo "${env.visitsImageTag}"
                     }
 
                     build job: 'developer_build', 
