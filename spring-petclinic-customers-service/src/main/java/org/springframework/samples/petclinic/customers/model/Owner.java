@@ -34,9 +34,6 @@ import java.util.*;
  * @author Maciej Szarlinski
  * @author Ramazan Sakin
  */
-
-// new line of code
-
 @Entity
 @Table(name = "owners")
 public class Owner {
