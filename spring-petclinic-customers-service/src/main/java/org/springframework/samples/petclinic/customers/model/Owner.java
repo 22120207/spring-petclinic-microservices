@@ -34,6 +34,9 @@ import java.util.*;
  * @author Maciej Szarlinski
  * @author Ramazan Sakin
  */
+
+// new line of code
+
 @Entity
 @Table(name = "owners")
 public class Owner {
@@ -87,13 +90,13 @@ public class Owner {
     @Override
     public String toString() {
         return new ToStringCreator(this)
-            .append("id", this.getId())
-            .append("lastName", this.getLastName())
-            .append("firstName", this.getFirstName())
-            .append("address", this.address)
-            .append("city", this.city)
-            .append("telephone", this.telephone)
-            .toString();
+                .append("id", this.getId())
+                .append("lastName", this.getLastName())
+                .append("firstName", this.getFirstName())
+                .append("address", this.address)
+                .append("city", this.city)
+                .append("telephone", this.telephone)
+                .toString();
     }
 
     public Integer getId() {
