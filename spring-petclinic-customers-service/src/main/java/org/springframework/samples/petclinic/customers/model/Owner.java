@@ -35,7 +35,7 @@ import java.util.*;
  * @author Ramazan Sakin
  */
 
-// push main again
+// push main again and again
 @Entity
 @Table(name = "owners")
 public class Owner {
