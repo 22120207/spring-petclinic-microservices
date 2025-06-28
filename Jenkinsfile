@@ -13,7 +13,7 @@ pipeline {
     }
 
     environment {
-        USERNAME = "tienminhktvn2"
+        USERNAME = "22120207"
     }
 
     stages {
@@ -24,8 +24,8 @@ pipeline {
                 checkout scm
 
                 script {
-                    // Get the first 8 characters of the SHA Git Commit
-                    def gitCommitHash = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                    // Get the first 7 characters of the SHA Git Commit
+                    def gitCommitHash = sh(script: "git describe --always", returnStdout: true).trim()
                     env.COMMIT_HASH = gitCommitHash
                 }
             }
@@ -116,7 +116,7 @@ pipeline {
             }
         }
 
-        stage('Maven Build') {
+        stage('Build') {
             steps {
                 script {
                     boolean testSuccess = true
@@ -138,7 +138,7 @@ pipeline {
                     if (testSuccess && modules.size() > 0) {
                         
                         for (module in modules) {
-                            def buildCommand = "mvn -pl ${module} -am clean install -DskipTests"
+                            def buildCommand = "mvn -pl ${module} -am clean install"
                             echo "Build for affected modules: ${module}"
                             sh "${buildCommand}"
                         }
@@ -175,91 +175,6 @@ pipeline {
                     }
                 }
             }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                script {
-                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
-                    if (modules.size() > 0) {
-
-                        // Build and Tag Images for changed modules
-                        for (module in modules) {
-                            def buildImagesCommand = "./mvnw clean install -pl ${module} -PbuildDocker -DskipTests"
-                            echo "Build Images for affected modules: ${module}"
-                            sh "${buildImagesCommand}"
-                            sh "docker tag springcommunity/${module}:latest ${USERNAME}/${module}:${env.COMMIT_HASH}"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Images') {
-            steps {
-                script {
-                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
-                    if (modules.size() > 0) {
-                        withCredentials([usernamePassword(
-                            credentialsId: 'DOCKER_HUB_CREDENTIALS',
-                            usernameVariable: 'DOCKER_USER',
-                            passwordVariable: 'DOCKER_PASS'
-                        )]) {
-                            sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                            for (module in modules) {
-                                def imageName = "${USERNAME}/${module}:${env.COMMIT_HASH}"
-                                echo "Pushing Docker image: ${imageName}"
-                                sh "docker push ${imageName}"
-                            }
-                        }
-                    } 
-                    else {
-                        echo "No changed modules; skipping Docker push."
-                    }
-                }
-            }
-        }
-
-        stage('Trigger Developer Build Job') {
-            steps {
-                script {
-                    def modules = env.CHANGED_MODULES ? env.CHANGED_MODULES.split(',') : []
-
-                    def customersBranch = 'main'
-                    def vetsBranch = 'main'
-                    def visitsBranch = 'main'
-                    def genaiBranch = 'main'
-
-                    if (modules.contains('spring-petclinic-customers-service')) {
-                        customersBranch = env.COMMIT_HASH
-                    }
-                    if (modules.contains('spring-petclinic-vets-service')) {
-                        vetsBranch = env.COMMIT_HASH
-                    }
-                    if (modules.contains('spring-petclinic-visits-service')) {
-                        visitsBranch = env.COMMIT_HASH
-                    }
-
-                    build job: 'developer_build', 
-                        parameters: [
-                            string(name: 'CUSTOMERS_IMAGE_TAG', value: customersBranch),
-                            string(name: 'VETS_IMAGE_TAG',      value: vetsBranch),
-                            string(name: 'VISITS_IMAGE_TAG',    value: visitsBranch),
-                            string(name: 'GENAI_IMAGE_TAG',     value: genaiBranch)
-                        ],
-                        wait: false
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            echo 'Logging out of Docker Hub'
-            sh 'docker logout'
-
-            echo 'Cleaning up all Docker images…'
-            sh 'docker image prune -af'
         }
     }
 }
