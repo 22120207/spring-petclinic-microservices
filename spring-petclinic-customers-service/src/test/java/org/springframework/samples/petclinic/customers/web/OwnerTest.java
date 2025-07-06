@@ -90,7 +90,6 @@ class OwnerTest {
         assertEquals(owner, pet.getOwner());
     }
 
-
     @Test
     void testGetPetsInternalNotNull() throws Exception {
         Field petsField = Owner.class.getDeclaredField("pets");
