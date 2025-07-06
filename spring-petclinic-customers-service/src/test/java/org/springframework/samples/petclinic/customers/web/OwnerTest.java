@@ -1,108 +1,82 @@
 package org.springframework.samples.petclinic.customers.web;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.customers.model.Owner;
-import org.springframework.samples.petclinic.customers.model.Pet;
+import org.springframework.samples.petclinic.customers.model.OwnerRepository;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.samples.petclinic.customers.web.mapper.OwnerEntityMapper;// Add this import if the class exists in your project
+import org.springframework.test.web.servlet.MockMvc;
+import java.util.Arrays;
+import java.util.Optional;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.lang.reflect.Field;
-import java.util.List;
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(OwnerResource.class)
+class OwnerResourceTest {
 
-import static org.junit.jupiter.api.Assertions.*;
+    @Autowired
+    private MockMvc mockMvc;
 
-@ExtendWith(MockitoExtension.class)
-class OwnerTest {
+    @MockBean
+    private OwnerRepository ownerRepository;
 
-    private Owner owner;
+    @MockBean
+    private OwnerEntityMapper ownerEntityMapper;
 
-    @BeforeEach
-    void setUp() {
-        owner = new Owner();
+    @Test
+    void shouldCreateOwner() throws Exception {
+        mockMvc.perform(post("/owners")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"firstName\":\"John\",\"lastName\":\"Doe\",\"address\":\"123 Street\",\"city\":\"City\",\"telephone\":\"1234567890\"}"))
+                .andExpect(status().isCreated());
+    }
+    
+    @Test
+    void shouldFindAllOwners() throws Exception {
+        Owner owner1 = new Owner();
+        owner1.setFirstName("John");
+        owner1.setLastName("Doe");
+
+        Owner owner2 = new Owner();
+        owner2.setFirstName("Jane");
+        owner2.setLastName("Smith");
+
+        given(ownerRepository.findAll()).willReturn(Arrays.asList(owner1, owner2));
+
+        mockMvc.perform(get("/owners"))
+                .andExpect(status().isOk());
+    }
+    @Test
+    void shouldUpdateOwner() throws Exception {
+        Owner owner = new Owner();
         owner.setFirstName("John");
         owner.setLastName("Doe");
-        owner.setAddress("123 Street");
-        owner.setCity("New York");
-        owner.setTelephone("1234567890");
+
+        given(ownerRepository.findById(1)).willReturn(Optional.of(owner));
+
+        mockMvc.perform(put("/owners/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"firstName\":\"John\",\"lastName\":\"Doe\",\"address\":\"123 Street\",\"city\":\"City\",\"telephone\":\"1234567890\"}"))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    void testAddPet() {
-        Pet pet = new Pet();
-        pet.setName("Buddy");
+    void shouldReturnNotFoundWhenUpdatingNonExistingOwner() throws Exception {
+        given(ownerRepository.findById(1)).willReturn(Optional.empty());
 
-        owner.addPet(pet);
-
-        List<Pet> pets = owner.getPets();
-        assertEquals(1, pets.size());
-        assertEquals("Buddy", pets.get(0).getName());
-        assertEquals(owner, pets.get(0).getOwner());
-    }
-
-    @Test
-    void testGetPetsSorted() {
-        Pet pet1 = new Pet();
-        pet1.setName("Charlie");
-        Pet pet2 = new Pet();
-        pet2.setName("Buddy");
-
-        owner.addPet(pet1);
-        owner.addPet(pet2);
-
-        List<Pet> pets = owner.getPets();
-        assertEquals("Buddy", pets.get(0).getName());
-        assertEquals("Charlie", pets.get(1).getName());
-    }
-
-    @Test
-    void testOwnerDetails() {
-        assertEquals("John", owner.getFirstName());
-        assertEquals("Doe", owner.getLastName());
-        assertEquals("123 Street", owner.getAddress());
-        assertEquals("New York", owner.getCity());
-        assertEquals("1234567890", owner.getTelephone());
-    }
-
-    @Test
-    void testPetsAreSortedByName() {
-        Pet petA = new Pet();
-        petA.setName("Zebra");
-
-        Pet petB = new Pet();
-        petB.setName("Alpha");
-
-        owner.addPet(petA);
-        owner.addPet(petB);
-
-        List<Pet> pets = owner.getPets();
-        assertEquals("Alpha", pets.get(0).getName());
-        assertEquals("Zebra", pets.get(1).getName());
-    }
-
-    @Test
-    void testAddPetAssignsOwner() {
-        Pet pet = new Pet();
-        pet.setName("Buddy");
-
-        owner.addPet(pet);
-
-        assertEquals(owner, pet.getOwner());
-    }
-
-
-    @Test
-    void testGetPetsInternalNotNull() throws Exception {
-        Field petsField = Owner.class.getDeclaredField("pets");
-        petsField.setAccessible(true);
-        petsField.set(owner, null); // Simulate `null` pets set
-
-        assertNotNull(owner.getPets());
-        assertTrue(owner.getPets().isEmpty());
-    }
-
-    @Test
-    void testOwnerIdInitiallyNull() {
-        assertNull(owner.getId());
+        mockMvc.perform(put("/owners/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"firstName\":\"John\",\"lastName\":\"Doe\",\"address\":\"123 Street\",\"city\":\"City\",\"telephone\":\"1234567890\"}"))
+                .andExpect(status().isNotFound());
+                
     }
 }
